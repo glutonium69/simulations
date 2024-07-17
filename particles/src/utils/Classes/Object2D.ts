@@ -12,6 +12,7 @@ export default class Object2D {
     static ID_COUNTER: number = 0;
     private _animationId: number | null = null;
     private _velocity: Vector2D = new Vector2D(0, 0);
+    private _isAnimating: boolean = false;
 
     constructor(
         public position: Position, // center of object
@@ -40,31 +41,8 @@ export default class Object2D {
         this._velocity.y = y ? y : this._velocity.y;
     }
 
-    protected updateRealPos() {
-        this._boundingBox.x = this.position.x - this._boundingBox.width / 2;
-        this._boundingBox.y = this.position.y - this._boundingBox.height / 2;
-    }
-
-    protected startAnimation(fn: (...args: any[]) => boolean, ...args: any[]) {
-        if (this._velocity.x === 0 && this._velocity.y === 0) return;
-        if (this._animationId) this.stopAnimation();
-
-        const fnCallback = () => {
-            const breakLoop = fn(...args);
-            if (breakLoop) {
-                this.stopAnimation();
-                return;
-            }
-            this._animationId = requestAnimationFrame(fnCallback);
-        }
-        fnCallback();
-    }
-
-    protected stopAnimation() {
-        if (this._animationId) {
-            cancelAnimationFrame(this._animationId);
-            this._animationId = null;
-        }
+    public stopAnimation() {
+        this._isAnimating = false;
     }
 
     public clearObject(ctx: CanvasRenderingContext2D) {
@@ -74,5 +52,25 @@ export default class Object2D {
             this._boundingBox.width,
             this._boundingBox.height
         );
+    }
+
+    protected updateRealPos() {
+        this._boundingBox.x = this.position.x - this._boundingBox.width / 2;
+        this._boundingBox.y = this.position.y - this._boundingBox.height / 2;
+    }
+
+    protected startAnimation(fn: (...args: any[]) => void, ...args: any[]) {
+        if (this._velocity.x === 0 && this._velocity.y === 0) return;
+        if (this._animationId) this.stopAnimation();
+
+        this._isAnimating = true;
+        const fnCallback = () => {
+            fn(...args);
+            if (!this._isAnimating) {
+                return;
+            }
+            this._animationId = requestAnimationFrame(fnCallback);
+        }
+        fnCallback();
     }
 }

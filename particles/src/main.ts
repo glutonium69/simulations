@@ -31,7 +31,6 @@ init();
 
 objects.forEach(cir => {
     cir.draw(ctx!);
-    console.log(cir.getVelocity());
 });
 
 document.body.addEventListener("mousedown", event => {
@@ -44,11 +43,7 @@ document.body.addEventListener("mousedown", event => {
 
 document.body.addEventListener("mouseup", () => {
     objects.forEach(cir => {
-        const pos = new Position(
-            Math.floor(Math.random() * (innerWidth - 20) + 10),
-            Math.floor(Math.random() * (innerHeight - 20) + 10)
-        )
-        cir.moveTo(ctx!, pos);
+        cir.stopAnimation();
     })
 })
 

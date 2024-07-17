@@ -63,7 +63,7 @@ export default class Circle extends Object2D {
         distance: Vector2D,
         target: Vector2D,
         direction: [Direction.Left | Direction.Right, Direction.Up | Direction.Down]
-    ): boolean => {
+    ): void => {
 
         this.clearObject(ctx);
 
@@ -112,7 +112,6 @@ export default class Circle extends Object2D {
 
         this.draw(ctx);
         this.updateRealPos();
-        if (distance.x === 0 && distance.y === 0) return true;
-        return false;
+        if (distance.x === 0 && distance.y === 0) this.stopAnimation();
     }
 }
