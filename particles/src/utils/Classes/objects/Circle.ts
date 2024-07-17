@@ -5,71 +5,83 @@ import Position from "../vectors/Position.js";
 
 
 export default class Circle extends Object {
-    private _animateFrameId: number;
+
+    readonly id = Object.ID_COUNTER;
 
     constructor(
-        public pos: Position,
+        public position: Position,
         public radius: number,
         public color: string,
         public velocity: Vector2D = new Vector2D(0, 0),
     ) {
-        super()
-        this.pos;
+        super(
+            position,
+            velocity,
+            {
+                x: position.x - radius,
+                y: position.y - radius,
+                width: radius * 2,
+                height: radius * 2
+            }
+        );
+        this.position;
         this.radius;
         this.color;
         this.velocity;
-        this._animateFrameId = 0;
     }
 
     public draw(ctx: CanvasRenderingContext2D): void {
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
         ctx.fillStyle = this.color;
         ctx.fill();
     }
 
-    private _animate = (
+    private _animateFunc = (
         ctx: CanvasRenderingContext2D,
         distance: Vector2D,
         target: Vector2D,
         direction: [Direction.Left | Direction.Right, Direction.Up | Direction.Down]
-    ) => {
-        if(this.velocity.x === 0 && this.velocity.y === 0) return;
+    ): boolean => {
 
-        ctx.clearRect(this.pos.x - this.radius, this.pos.y - this.radius, this.radius * 2, this.radius * 2);
+        this.clearObject(ctx);
 
-        if(distance.x > 0) {
+        if (distance.x > 0) {
             switch (direction[0]) {
                 case Direction.Left:
-                    this.pos.x -= this.velocity.x;
-                    if(this.pos.x < target.x) {
-                        this.pos.x = target.x
+                    this.position.x -= this.velocity.x;
+                    distance.x -= this.velocity.x;
+                    if (this.position.x < target.x) {
+                        this.position.x = target.x
                         distance.x = 0;
                     };
                     break;
                 case Direction.Right:
-                    this.pos.x += this.velocity.x;
-                    if(this.pos.x > target.x) {
-                        this.pos.x = target.x
+                    this.position.x += this.velocity.x;
+                    distance.x -= this.velocity.x;
+                    if (this.position.x > target.x) {
+                        this.position.x = target.x
                         distance.x = 0;
                     };
                     break;
             }
         }
 
-        if(distance.y > 0) {
+        if (distance.y > 0) {
             switch (direction[1]) {
                 case Direction.Up:
-                    this.pos.y -= this.velocity.y;
-                    if(this.pos.y < target.y) {
-                        this.pos.y = target.y
+                    this.position.y -= this.velocity.y;
+                    distance.y -= this.velocity.y;
+                    if (this.position.y < target.y) {
+                        this.position.y = target.y
                         distance.y = 0;
                     };
                     break;
                 case Direction.Down:
-                    this.pos.y += this.velocity.y;
-                    if(this.pos.y > target.y) {
-                        this.pos.y = target.y
+                    this.position.y += this.velocity.y;
+                    distance.y -= this.velocity.y;
+                    if (this.position.y > target.y) {
+                        this.position.y = target.y
                         distance.y = 0;
                     };
                     break;
@@ -77,32 +89,32 @@ export default class Circle extends Object {
         }
 
         this.draw(ctx);
-
-        if(distance.x > 0 || distance.y > 0)
-            this._animateFrameId = requestAnimationFrame(() => this._animate(ctx, distance, target, direction));
+        this.updateRealPos();
+        if (distance.x === 0 && distance.y === 0) return true;
+        return false;
     }
 
     public move(ctx: CanvasRenderingContext2D) {
-        cancelAnimationFrame(this._animateFrameId);
         return {
             to: (target: Position) => {
                 const direction: [Direction.Left | Direction.Right, Direction.Up | Direction.Down] = [Direction.Left, Direction.Up];
-                
-                if(this.pos.x < target.x)
+
+                if (this.position.x < target.x)
                     direction[0] = Direction.Right;
-                else if(this.pos.x > target.x)
+                else if (this.position.x > target.x)
                     direction[0] = Direction.Left;
 
-                if(this.pos.y < target.y)
+                if (this.position.y < target.y)
                     direction[1] = Direction.Down;
-                else if(this.pos.y > target.y)
+                else if (this.position.y > target.y)
                     direction[1] = Direction.Up;
 
-                this._animate(
+                this.startAnimation(
+                    this._animateFunc,
                     ctx,
                     new Vector2D(
-                        Math.abs(this.pos.x - target.x),
-                        Math.abs(this.pos.y - target.y)
+                        Math.abs(target.x - this.position.x),
+                        Math.abs(target.y - this.position.y)
                     ),
                     target,
                     direction

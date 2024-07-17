@@ -13,7 +13,16 @@ export default class Rectangle extends Object {
         public color: string,
         public velocity: Vector2D = new Vector2D(0, 0),
     ) {
-        super()
+        super(
+            pos,
+            velocity,
+            {
+                x: pos.x - width / 2,
+                y: pos.y - height / 2,
+                width: width,
+                height: height
+            }
+        )
         this._ctx;
         this.pos;
         this._realPos = new Position(this.pos.x - this.width / 2, this.pos.y - this.height / 2);
@@ -40,10 +49,10 @@ export default class Rectangle extends Object {
         this._realPos.y = this.pos.y - this.height / 2;
         this._animate();
     }
-    
+
     public move(vel: number | null) {
         return {
-            
+
         }
     }
 }
