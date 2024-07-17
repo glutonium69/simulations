@@ -2,21 +2,23 @@ import { Direction } from "../enums.js";
 import Vector2D from "./Vector2D.js";
 import Position from "./vectors/Position.js";
 
+interface BoundingBox {
+    x: number, // top left croner x
+    y: number, // top left croner y
+    width: number,
+    height: number
+}
+
 export default class Object {
     static ID_COUNTER: number = 0;
     private _animationId: number | null = null;
 
     constructor(
         public position: Position, // center of object
-        public velocity: Vector2D,
-        protected _boundingBox: {
-            x: number, // top left croner x
-            y: number, // top left croner y
-            width: number,
-            height: number
-        }
+        public boundingBoxProps: BoundingBox,
     ) {
         Object.ID_COUNTER += 1;
+        this.boundingBox = boundingBoxProps;
     }
 
     protected updateRealPos() {
