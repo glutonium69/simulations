@@ -1,4 +1,5 @@
 import Vector2D from "./Vector2D.js";
+import World from "./World.js";
 import Position from "./vectors/Position.js";
 
 interface BoundingBox {
@@ -8,14 +9,21 @@ interface BoundingBox {
     height: number,
 }
 
+interface ObjectProps {
+    angle: number,
+    angularVelocity: number,
+}
+
 export default class Object2D {
     static ID_COUNTER: number = 0;
-    private _animationId: number | null = null;
     private _velocity: Vector2D = new Vector2D(0, 0);
-    private _isAnimating: boolean = false;
+    public props: ObjectProps = {
+        angle: 0,
+        angularVelocity: 0
+    };
 
     constructor(
-        public position: Position, // center of object
+        private _position: Position, // center of object
         public color: string,
         // the reason to have it private is cause we have to get the value of bounding box from the sub class
         // at the time of initialization since its calculation varies between the shapes
@@ -36,41 +44,30 @@ export default class Object2D {
 
     public getVelocity = (): Vector2D => this._velocity.copy();
 
-    public setVelocity(x: number | null, y: number | null) {
+    public setVelocity(x?: number, y?: number): void {
         this._velocity.x = x ? x : this._velocity.x;
         this._velocity.y = y ? y : this._velocity.y;
     }
 
-    public stopAnimation() {
-        this._isAnimating = false;
+    public getPosition = (): Position => this._position.copy();
+
+    public setPosition(x?: number, y?: number): void {
+        if (x) this._position.x = x;
+        if (y) this._position.y = y;
+
+        if (x || y) this.updateRealPos();
     }
 
-    public clearObject(ctx: CanvasRenderingContext2D) {
-        ctx.clearRect(
-            this._boundingBox.x,
-            this._boundingBox.y,
-            this._boundingBox.width,
-            this._boundingBox.height
-        );
+    public isOutsideCanvas() {
+        const { height, width, x, y } = this.getBoundingBox();
+        return x + width <= World.CANVAS.offsetLeft ||
+            x >= World.CANVAS.offsetLeft + World.CANVAS.offsetWidth ||
+            y + height <= World.CANVAS.offsetTop ||
+            y >= World.CANVAS.offsetTop + World.CANVAS.offsetHeight
     }
 
-    protected updateRealPos() {
-        this._boundingBox.x = this.position.x - this._boundingBox.width / 2;
-        this._boundingBox.y = this.position.y - this._boundingBox.height / 2;
-    }
-
-    protected startAnimation(fn: (...args: any[]) => void, ...args: any[]) {
-        if (this._velocity.x === 0 && this._velocity.y === 0) return;
-        if (this._animationId) this.stopAnimation();
-
-        this._isAnimating = true;
-        const fnCallback = () => {
-            fn(...args);
-            if (!this._isAnimating) {
-                return;
-            }
-            this._animationId = requestAnimationFrame(fnCallback);
-        }
-        fnCallback();
+    protected updateRealPos(): void {
+        this._boundingBox.x = this._position.x - this._boundingBox.width / 2;
+        this._boundingBox.y = this._position.y - this._boundingBox.height / 2;
     }
 }

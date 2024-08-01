@@ -1,4 +1,5 @@
 import Object2D from "../Object2D.js";
+import World from "../World.js";
 import Position from "../vectors/Position.js";
 
 export default class Rectangle extends Object2D {
@@ -6,38 +7,41 @@ export default class Rectangle extends Object2D {
     readonly id = Object2D.ID_COUNTER;
 
     constructor(
-        public pos: Position,
+        private _pos: Position,
         public width: number,
         public height: number,
         public color: string,
     ) {
         super(
-            pos,
+            _pos,
             color,
             {
-                x: pos.x - width / 2,
-                y: pos.y - height / 2,
+                x: _pos.x - width / 2,
+                y: _pos.y - height / 2,
                 width: width,
                 height: height
             }
         )
     }
 
-    public draw(ctx: CanvasRenderingContext2D): void {
+    public draw(): void {
+        const ctx = World.CTX;
         ctx.beginPath();
-        ctx.fillRect(this.getBoundingBox().width, this.getBoundingBox().height, this.width, this.height);
         ctx.fillStyle = this.color;
-        ctx.fill();
+        ctx.fillRect(this.getBoundingBox().x, this.getBoundingBox().y, this.width, this.height);
     }
 
-    private _animate(ctx: CanvasRenderingContext2D) {
-        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
-        this.draw(ctx);
-    }
-
-    public move(vel: number | null) {
-        return {
-
-        }
+    public rotate(): void {
+        const ctx = World.CTX;
+        const { width, height } = this.getBoundingBox();
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this._pos.x, this._pos.y);
+        ctx.rotate(this.props.angularVelocity + this.props.angle);
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-width / 2, -height / 2, width, height);
+        ctx.restore();
+        this.props.angle += this.props.angularVelocity;
     }
 }

@@ -1,17 +1,15 @@
 import Vector2D from "./utils/Classes/Vector2D.js";
+import World from "./utils/Classes/World.js";
 import Circle from "./utils/Classes/objects/Circle.js";
+import Rectangle from "./utils/Classes/objects/Rectangle.js";
 import Position from "./utils/Classes/vectors/Position.js";
+import { Shapes } from "./utils/tsUtils.js";
 
-const cnv = document.getElementById("cnv") as HTMLCanvasElement;
-const ctx = cnv.getContext("2d");
-
-cnv.width = window.innerWidth;
-cnv.height = window.innerHeight;
-
-const objects: Map<number | string, Circle> = new Map();
+const world = new World();
+world.init();
 
 function init() {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 1000; i++) {
         const pos = new Position(
             Math.floor(Math.random() * (innerWidth - 20) + 10),
             Math.floor(Math.random() * (innerHeight - 20) + 10)
@@ -21,33 +19,34 @@ function init() {
             Math.floor(Math.random() * 15 + 5)
         )
         const col = `hsl(${Math.random() * 359 + 1}, 93%, 70%)`
-        const cir = new Circle(pos, 10, col);
-        cir.setVelocity(vel.x, vel.y);
-        objects.set(cir.id, cir);
+        const rec = new Rectangle(pos, 10, 10, col);
+        rec.props.angularVelocity = Math.random() * 0.1 * (i % 2 === 0 ? 1 : -1);
+        world.addObjects(rec);
     }
 }
 
 init();
-
-objects.forEach(cir => {
-    cir.draw(ctx!);
-});
-
-document.body.addEventListener("mousedown", event => {
-    const x = event.clientX;
-    const y = event.clientY;
-    objects.forEach(cir => {
-        cir.moveTo(ctx!, new Position(x, y))
+let fps = 0;
+function animate() {
+    World.CTX.clearRect(
+        0,0,
+        World.CANVAS.width,
+        World.CANVAS.height
+    )
+    world.worldObjects.forEach(obj => {
+        obj.setPosition(obj.getPosition().x + 1)
+        obj.draw();
+        // obj.isOutsideCanvas() && world.removeObjects(obj);
+        // obj.rotate();
     })
-})
+    fps++;
+    requestAnimationFrame(animate);
+}
+animate();
 
-document.body.addEventListener("mouseup", () => {
-    objects.forEach(cir => {
-        cir.stopAnimation();
-    })
-})
-
-window.addEventListener("resize", () => {
-    cnv.width = window.innerWidth;
-    cnv.height = window.innerHeight;
-})
+setInterval(() => {
+    document.querySelector(".fps")!.textContent = "FPS: " + fps;
+    fps = 0;
+    document.querySelector(".fps")!.style.color = "wheat"
+    setTimeout(() => {document.querySelector(".fps")!.style.color = "white"}, 500)
+}, 1000)
